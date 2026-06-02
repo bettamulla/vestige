@@ -1,0 +1,171 @@
+/* ── Vestige global styles ──────────────────────────────────────────────────
+   Mobile-first hardening + the keyframes the app animates with. */
+
+:root {
+  /* Safe-area fallbacks (0 on non-notched devices). */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #08080d;
+  /* Lock horizontal scroll so nothing can bleed sideways on a phone. */
+  overflow-x: hidden;
+  max-width: 100%;
+  /* Don't let iOS/Android inflate text in landscape. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Momentum scrolling on iOS. */
+  -webkit-overflow-scrolling: touch;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#root { overflow-x: hidden; max-width: 100vw; }
+
+/* ── iOS zoom guard ─────────────────────────────────────────────────────────
+   Safari zooms the viewport whenever a focused form control has a font-size
+   below 16px. The app uses smaller, denser type for inputs by design, so we
+   pin the *rendered* control font to 16px (visually fine, kills the zoom jump).
+   Applied broadly so no individual textarea can reintroduce the bug. */
+input, textarea, select, button {
+  font-size: 16px;
+  font-family: inherit;
+}
+
+/* Keep the range slider compact (16px on it is irrelevant; it has no text). */
+input[type="range"] { font-size: inherit; }
+
+/* Respect users who ask for reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ── Keyframes the app references inline ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Nav button cluster scrolls horizontally on narrow screens without a visible bar. */
+.nav-cluster {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;          /* Firefox */
+}
+.nav-cluster::-webkit-scrollbar { display: none; }  /* WebKit */
+
+/* Horizontal scroll regions (e.g. the memory landscape bars) get momentum too. */
+.h-scroll { -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   EDITORIAL — v1.0 visual language (translated from the Replit "Editorial"
+   mockup into the app's own styling system). Reusable primitives applied across
+   screens: ambient orbs, glass surfaces, hairlines, gradient/serif treatments.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Gradient text (purple→cyan) for accented words and key numerals. */
+.v-gradient-text {
+  background: linear-gradient(135deg, #9B7FD4 0%, #5ED4D4 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+
+/* Glass surface — subtle two-tone tint + blur, the Editorial card material. */
+.v-glass {
+  background: linear-gradient(135deg, rgba(124,92,191,0.06), rgba(94,212,212,0.03));
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Editorial eyebrow — tracked, uppercase, small. */
+.v-eyebrow {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  font-weight: 500;
+}
+
+/* Hairline rule. */
+.v-hairline { height: 1px; background: rgba(255,255,255,0.10); width: 100%; }
+
+/* Ambient orbs — soft floating background light. Decorative, non-interactive. */
+.v-orbs { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.v-orb-1, .v-orb-2 { position: absolute; border-radius: 50%; filter: blur(40px); pointer-events: none; }
+.v-orb-1 {
+  top: -8%; right: -18%; width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(124,92,191,0.18) 0%, rgba(124,92,191,0) 70%);
+  animation: vfloat 10s ease-in-out infinite alternate;
+}
+.v-orb-2 {
+  top: 38%; left: -20%; width: 250px; height: 250px;
+  background: radial-gradient(circle, rgba(94,212,212,0.13) 0%, rgba(94,212,212,0) 70%);
+  animation: vfloat 12s ease-in-out infinite alternate-reverse;
+}
+@keyframes vfloat {
+  0%   { transform: translateY(0) scale(1); }
+  100% { transform: translateY(20px) scale(1.05); }
+}
+
+/* Hide scrollbars on scroll regions that want a clean editorial look. */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Version badge at the foot of the app. */
+.v-version {
+  font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+  color: #44445a; text-align: center; padding: 28px 0 calc(20px + var(--safe-bottom));
+}
+
+/* ── Animations referenced by the app that App.jsx does NOT already inject ───
+   App.jsx injects most keyframes inline at runtime (fadeUp, glow, pulse, spin,
+   shimmer, countUp, ambientFloat, slowPulse, cardLift). Only these two
+   memory-graph effects are referenced but not defined there. */
+
+@keyframes decayPulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 0.75; }
+}
+
+@keyframes nodeGlow {
+  0%, 100% { filter: drop-shadow(0 0 3px currentColor); opacity: 0.8; }
+  50%      { filter: drop-shadow(0 0 8px currentColor); opacity: 1; }
+}
+
+/* ── Logo mark — subtle living glow + hover lift ─────────────────────────────
+   The mark carries a class (vestige-svg) but had no rule; give it the gentle
+   pulse the design implies, and a small scale on hover of the whole mark. */
+.vestige-svg {
+  animation: logoPulse 4s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(124,92,191,0.4)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(124,92,191,0.75)); }
+}
+.vestige-mark:hover .vestige-svg { transform: scale(1.06); }
+.vestige-mark:active { transform: scale(0.97); }
